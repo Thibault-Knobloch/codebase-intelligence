@@ -1,11 +1,12 @@
 import os
 from tree_sitter import Language, Parser
+import warnings
 
+warnings.simplefilter("ignore", FutureWarning)
 
 # Path to the compiled TypeScript language library
 TS_LANGUAGE_PATH = os.path.join(os.path.dirname(__file__), 'build', 'typescript.so')
 
-# Load TypeScript language and parser
 try:
     TS_LANGUAGE = Language(TS_LANGUAGE_PATH, "typescript")
     parser = Parser()

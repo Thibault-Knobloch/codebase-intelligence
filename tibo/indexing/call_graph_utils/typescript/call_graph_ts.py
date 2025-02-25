@@ -6,7 +6,6 @@ from .ParserClassTS import CodeStructureExtractor, CallGraphExtractor
 import click
 from ....utils import save_json
 
-# Add directories you want to ignore
 IGNORE_DIRS = ["node_modules", ".next"]
 
 def get_module_name(file_path, project_path):

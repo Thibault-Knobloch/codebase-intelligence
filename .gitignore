@@ -4,3 +4,5 @@ tibo.egg-info/
 *.pyc
 *.pyo
 *.pyd
+.env
+**/.env
