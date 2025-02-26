@@ -29,6 +29,9 @@ TIBO_VECTOR_DIR = os.path.join(TIBO_DIR, "vector")
 FILE_CHUNKS_WITH_VECTORS_FILE_PATH = os.path.join(TIBO_VECTOR_DIR, "file_chunks_with_vectors.json")
 FAISS_INDEX_PATH = os.path.join(TIBO_VECTOR_DIR, "chunks_vector_db.faiss")
 
+QUERY_OUTPUT_DIR = os.path.join(TIBO_DIR, "query_output")
+QUERY_OUTPUT_FILE_PATH = os.path.join(QUERY_OUTPUT_DIR, "query_output.json")
+
 
 def save_json(data, output_file):
     output_dir = os.path.dirname(output_file)

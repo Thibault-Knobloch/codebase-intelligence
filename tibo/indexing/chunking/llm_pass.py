@@ -3,59 +3,87 @@ import requests
 import os
 import click
 from typing import Dict, List, Optional
+import time
+from requests.exceptions import HTTPError
 from ...utils import FILE_CHUNKS_FILE_PATH, OPENAI_API_KEY, OPENAI_API_URL, save_json
 
 
-def generate_summary(
-    code_chunk: str,
+def generate_summaries_for_file(
+    code_chunks: List[str],
     file_path: str,
     project_description: str,
     project_structure: str
-) -> str:
+) -> List[str]:
     """
-    Generate minimal summary of code chunk for NLP matching.
+    Generate minimal summaries for all code chunks in a file in one API call.
     """
-    try:        
-        prompt = (
-            "Summarize this code chunk concisely using the following format:\n\n"
-            "<function/class name>: <brief purpose of function/class in project, using 20 words or less>\n"
-            "Rules:\n"
-            "- Do NOT describe syntax, just the purpose and effect.\n"
-            "- Avoid redundancy, focus on the core functionality.\n"
-            "- Use consistent phrasing.\n\n"
-            f"Project context: {project_description}\n\n"
-            f"Project structure: {project_structure}\n\n"
-            f"Code chunk is from file: {file_path}\n\n"
-            f"Code chunk:\n```{code_chunk}```\n\n"
-            "Output only the structured summary—nothing else."
-        )
+    retry_delays = [1, 2, 4, 8, 16]  # Exponential backoff delays in seconds
+    
+    if not any(chunk.strip() for chunk in code_chunks):
+        return ["Empty chunk: No functionality to summarize."] * len(code_chunks)
+
+    for attempt, delay in enumerate(retry_delays + [None]):  # Last attempt has no delay
+        try:
+            # Format all chunks into a single prompt
+            chunks_text = "\n\n".join(
+                f"Chunk {i}:\n```{chunk}```" for i, chunk in enumerate(code_chunks)
+            )
+            prompt = (
+                "Summarize each code chunk concisely using this format:\n\n"
+                "<function/class name>: <brief purpose of function/class in project, using 20 words or less>\n"
+                "Rules:\n"
+                "- Do NOT describe syntax, just the purpose and effect.\n"
+                "- Avoid redundancy, focus on the core functionality.\n"
+                "- Use consistent phrasing.\n"
+                "- Return one summary per line, matching the order of the chunks.\n\n"
+                f"Project context: {project_description}\n\n"
+                f"Project structure: {project_structure}\n\n"
+                f"Code chunks are from file: {file_path}\n\n"
+                f"Code chunks:\n{chunks_text}\n\n"
+                "Output only the structured summaries, one per line—nothing else."
+            )
+            
+            headers = {
+                "Authorization": f"Bearer {OPENAI_API_KEY}",
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "model": "gpt-4o-mini",
+                "messages": [
+                    {"role": "user", "content": prompt}
+                ],
+                "max_tokens": 250 * len(code_chunks)  # Scale max_tokens with chunk count
+            }
+            
+            response = requests.post(OPENAI_API_URL, headers=headers, json=payload)
+            response.raise_for_status()
+            
+            # Split the response into a list of summaries
+            summaries = response.json()["choices"][0]["message"]["content"].strip().split("\n")
+            if len(summaries) != len(code_chunks):
+                raise ValueError(f"Expected {len(code_chunks)} summaries, got {len(summaries)}")
+            return summaries
         
-        headers = {
-            "Authorization": f"Bearer {OPENAI_API_KEY}",
-            "Content-Type": "application/json"
-        }
-        
-        payload = {
-            "model": "gpt-4o-mini",
-            "messages": [
-                {"role": "user", "content": prompt}
-            ],
-            "max_tokens": 100
-        }
-        
-        response = requests.post(OPENAI_API_URL, headers=headers, json=payload)
-        response.raise_for_status()
-        
-        summary = response.json()["choices"][0]["message"]["content"]
-        return summary
-        
-    except Exception as e:
-        print(f"Error generating summary: {e}")
-        return f"Error: {str(e)}"
+        except HTTPError as e:
+            if e.response.status_code == 400:
+                return [f"Error: Bad Request - Invalid input for chunk {i} in {file_path}" 
+                        for i in range(len(code_chunks))]
+            elif e.response.status_code == 429:
+                if delay is None:  # Max retries reached
+                    return [f"Error: Too Many Requests - Skipped after retries for chunk {i} in {file_path}" 
+                            for i in range(len(code_chunks))]
+                print(f"Rate limit hit for file {file_path}, retrying in {delay}s...")
+                time.sleep(delay)
+            else:
+                return [f"Error: Unexpected HTTP error {e.response.status_code} for chunk {i} in {file_path}" 
+                        for i in range(len(code_chunks))]
+        except Exception as e:
+            return [f"Error: {str(e)}" for _ in range(len(code_chunks))]
 
 def process_json_file(project_description: str, project_structure: str) -> None:
     """
-    Process code chunks and generate concise summaries.
+    Process code chunks and generate concise summaries, batching by file.
     """
     os.makedirs(os.path.dirname(FILE_CHUNKS_FILE_PATH), exist_ok=True)
     
@@ -67,18 +95,20 @@ def process_json_file(project_description: str, project_structure: str) -> None:
         return
     
     total_chunks = sum(len(chunks) for chunks in data.values())
-    click.secho(f"Processing {total_chunks} chunks...")
-    with click.progressbar(length=total_chunks, label="", show_pos=True) as bar:
-        processed_chunks = 0
+    total_files = len(data)
+    click.secho(f"Processing {total_chunks} chunks across {total_files} files...")
+    with click.progressbar(length=total_files, label="", show_pos=True) as bar:
         for file_path, chunks in data.items():
-            file_name = os.path.basename(file_path)
-            
-            for chunk in chunks:
-                if not chunk.get("en-chunk"):
-                    code = chunk["code-chunk"]
-                    summary = generate_summary(code, file_path, project_description, project_structure)
-                    chunk["en-chunk"] = summary
-                processed_chunks += 1
-                bar.update(1)
+            # Collect all code chunks for this file
+            code_chunks = [chunk["code-chunk"] for chunk in chunks if not chunk.get("en-chunk")]
+            if code_chunks:  # Only make a call if there are unsummarized chunks
+                summaries = generate_summaries_for_file(code_chunks, file_path, project_description, project_structure)
+                # Assign summaries back to chunks that need them
+                summary_idx = 0
+                for chunk in chunks:
+                    if not chunk.get("en-chunk"):
+                        chunk["en-chunk"] = summaries[summary_idx]
+                        summary_idx += 1
+            bar.update(1)
     
     save_json(data, FILE_CHUNKS_FILE_PATH)

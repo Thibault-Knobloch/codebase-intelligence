@@ -7,7 +7,7 @@ from tibo.fetching.fetching import fetch_query
 
 @click.group()
 def cli():
-    pass
+    click.echo("tibo")
 
 @cli.command()
 def index():
@@ -30,9 +30,13 @@ def index():
         sys.exit(1)
 
 @cli.command()
-@click.argument("query")
+@click.argument("query", required=False)
 def fetch(query):
     """Fetch relevant chunks based on a user query."""
+    if not query:
+        click.secho("WARN - Please provide a query.")
+        click.secho("Usage: tibo fetch <query>", fg="yellow")
+        sys.exit(1)
     click.secho("\nSearching codebase...", fg="cyan", bold=True)
     
     try:
