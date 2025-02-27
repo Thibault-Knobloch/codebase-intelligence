@@ -3,7 +3,7 @@ import json
 import click
 from dotenv import load_dotenv
 
-
+CONFIG_PATH = os.path.expanduser("~/.tibo.env")
 TIBO_DIR = ".tibo"
 PROJECT_DETAILS_FILE_PATH = os.path.join(TIBO_DIR, "project_details.json")
 
@@ -20,8 +20,7 @@ CALL_GRAPH_TS_IMAGE_PATH = os.path.join(TIBO_TYPESCRIPT_DIR, "call_graph_ts.png"
 TIBO_CHUNKS_DIR = os.path.join(TIBO_DIR, "chunks")
 FILE_CHUNKS_FILE_PATH = os.path.join(TIBO_CHUNKS_DIR, "file_chunks.json")
 
-env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
-load_dotenv(env_path)
+load_dotenv(CONFIG_PATH)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
 

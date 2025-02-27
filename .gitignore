@@ -6,3 +6,6 @@ tibo.egg-info/
 *.pyd
 .env
 **/.env
+build/
+dist/
+testenv/

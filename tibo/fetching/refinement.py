@@ -132,7 +132,8 @@ def enhance_code_with_call_graph(python_call_graph, typescript_call_graph, query
                 call_info = call_graph_lookup[full_key]
                 add_related_chunks(call_info, chunk_lookup, relevant_context)
             else:
-                print("No call graph information available")
+                # no call graph information available
+                pass
             
     total_files = len(relevant_context)
     total_chunks = sum(len(chunks) for chunks in relevant_context.values())

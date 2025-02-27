@@ -61,9 +61,7 @@ def fetch_query(query):
             })
 
     save_json(output_data, QUERY_OUTPUT_FILE_PATH)
-    click.echo(f"Matches: {len(output_data)} files, {sum(len(v) for v in output_data.values())} chunks total")
-    for file, chunks in output_data.items():
-        click.echo(f" - {file}: {len(chunks)} chunks")
+    click.echo(f"OK - Matches: {len(output_data)} files, {sum(len(v) for v in output_data.values())} chunks total")
     echo_success(f"Relevant chunks fetched.")
 
     click.secho("\nRefining results with code graph...", bold=True)
@@ -71,6 +69,10 @@ def fetch_query(query):
     ts_call_graph_data = load_json_file(CALL_GRAPH_TS_FILE_PATH)
     enhance_code_with_call_graph(py_call_graph_data, ts_call_graph_data, output_data, file_chunks_with_vectors)
     echo_success("Enhanced chunks saved.")
+
+    click.secho("\nRelevant context files for the query:", bold=True)
+    for file, chunks in output_data.items():
+        click.echo(f" - {file}: {len(chunks)} chunks")
 
 
 def load_faiss_index(filename):

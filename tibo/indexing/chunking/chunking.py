@@ -23,7 +23,7 @@ IGNORE_DIRS = {
     '.git', '.DS_Store', '__pycache__', '.idea', '.vscode', 'node_modules',
     'dist', 'build', '.pytest_cache', '.coverage', 'venv', 'env', '.env',
     '.next', 'migrations', 'static', 'cache', 'vendor-chunks', 'types',
-    'logs', 'media', 'server', 'pages', 'objects', 'refs', 'hooks'
+    'logs', 'media', 'server', 'pages', 'objects', 'refs', 'hooks', '.tibo'
 }
 
 # Patterns for files that are typically generated (regex)
