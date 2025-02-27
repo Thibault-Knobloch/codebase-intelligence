@@ -1,5 +1,5 @@
 # codebase-intelligence
-🧩 **Tibo** – a powerful command-line tool designed to index your codebase, generate call graphs, and chunk code into a vector database. With Tibo, you can query your codebase using natural language and retrieve contextually relevant files, functions, and code snippets effortlessly.
+🧩 **Tibo** – a powerful command-line tool designed to index your codebase, generate call graphs, and chunk code into a vector database. With **tibo**, you can query your codebase using natural language and retrieve contextually relevant files, functions, and code snippets effortlessly.
 
 <p align="center">
   <img width="759" alt="Tibo Workflow" src="https://github.com/user-attachments/assets/1475103e-9810-420f-8ec2-c25d905ea543" />
@@ -41,7 +41,7 @@ Note: This creates a .tibo folder in your project root to store indexed data, ca
 tibo fetch "my query to the codebase"
 ```
 Results include the most relevant file names and code chunks.
-Full output is saved in .tibo/query_output for review.
+Full output is saved in .tibo/query_output/query_output.json.
 
 ## How It Works
 **Configuration**: Link Tibo to your OpenAI API for LLM-powered enhancements.
