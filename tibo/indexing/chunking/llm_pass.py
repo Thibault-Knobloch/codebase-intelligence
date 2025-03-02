@@ -22,25 +22,25 @@ def generate_summaries_for_file(
     if not any(chunk.strip() for chunk in code_chunks):
         return ["Empty chunk: No functionality to summarize."] * len(code_chunks)
 
-    for attempt, delay in enumerate(retry_delays + [None]):  # Last attempt has no delay
+    for attempt, delay in enumerate(retry_delays + [None]):
         try:
-            # Format all chunks into a single prompt
+            # Format all chunks into a single prompt with explicit numbering
             chunks_text = "\n\n".join(
-                f"Chunk {i}:\n```{chunk}```" for i, chunk in enumerate(code_chunks)
+                f"Chunk {i}:\n```python\n{chunk.strip()}\n```" for i, chunk in enumerate(code_chunks)
             )
             prompt = (
-                "Summarize each code chunk concisely using this format:\n\n"
-                "<function/class name>: <brief purpose of function/class in project, using 20 words or less>\n"
+                "Summarize each code chunk concisely using this format:\n"
+                "<function/class name/CHUNK_<index> if not found>: <brief purpose in 20 words or less>\n"
                 "Rules:\n"
-                "- Do NOT describe syntax, just the purpose and effect.\n"
-                "- Avoid redundancy, focus on the core functionality.\n"
-                "- Use consistent phrasing.\n"
-                "- Return one summary per line, matching the order of the chunks.\n\n"
-                f"Project context: {project_description}\n\n"
-                f"Project structure: {project_structure}\n\n"
-                f"Code chunks are from file: {file_path}\n\n"
-                f"Code chunks:\n{chunks_text}\n\n"
-                "Output only the structured summaries, one per line—nothing else."
+                "- Provide EXACTLY one summary per chunk, even if empty, trivial, or redundant.\n"
+                "- Match the number of summaries to the number of chunks (e.g., if 9 chunks, return 9 summaries).\n"
+                "- Do NOT skip chunks or combine them—treat each as independent.\n"
+                "- Output ONLY the summaries, one per line, with NO extra blank lines or text.\n"
+                "- Use 'CHUNK_<index>' (e.g., CHUNK_0) if no clear function/class name is present.\n"
+                f"Project context: {project_description}\n"
+                f"Project structure: {project_structure}\n"
+                f"File: {file_path}\n"
+                f"Chunks (total: {len(code_chunks)}):\n{chunks_text}\n"
             )
             
             headers = {
@@ -50,36 +50,42 @@ def generate_summaries_for_file(
             
             payload = {
                 "model": "gpt-4o-mini",
-                "messages": [
-                    {"role": "user", "content": prompt}
-                ],
-                "max_tokens": 250 * len(code_chunks)  # Scale max_tokens with chunk count
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 250 * len(code_chunks),
+                "temperature": 0.3  # Lower temperature for stricter adherence
             }
             
             response = requests.post(OPENAI_API_URL, headers=headers, json=payload)
             response.raise_for_status()
             
-            # Split the response into a list of summaries
-            summaries = response.json()["choices"][0]["message"]["content"].strip().split("\n")
+            # Parse summaries
+            raw_response = response.json()["choices"][0]["message"]["content"].strip()
+            summaries = [line.strip() for line in raw_response.split("\n") if line.strip()]
+            
+            # Validate length and pad/truncate if necessary
             if len(summaries) != len(code_chunks):
-                raise ValueError(f"Expected {len(code_chunks)} summaries, got {len(summaries)}")
+                print(f"\nWarning: Expected {len(code_chunks)} summaries, got {len(summaries)}. Adjusting...")
+                # Pad with error messages if too few
+                if len(summaries) < len(code_chunks):
+                    summaries.extend(
+                        [f"CHUNK_{i}: Error - Summary missing from LLM response" 
+                         for i in range(len(summaries), len(code_chunks))]
+                    )
+                # Truncate if too many
+                summaries = summaries[:len(code_chunks)]
             return summaries
         
         except HTTPError as e:
             if e.response.status_code == 400:
-                return [f"Error: Bad Request - Invalid input for chunk {i} in {file_path}" 
-                        for i in range(len(code_chunks))]
-            elif e.response.status_code == 429:
-                if delay is None:  # Max retries reached
-                    return [f"Error: Too Many Requests - Skipped after retries for chunk {i} in {file_path}" 
-                            for i in range(len(code_chunks))]
+                return [f"Error: Bad Request - Invalid input for chunk {i}" for i in range(len(code_chunks))]
+            elif e.response.status_code == 429 and delay is not None:
                 print(f"Rate limit hit for file {file_path}, retrying in {delay}s...")
                 time.sleep(delay)
             else:
-                return [f"Error: Unexpected HTTP error {e.response.status_code} for chunk {i} in {file_path}" 
-                        for i in range(len(code_chunks))]
+                return [f"Error: HTTP {e.response.status_code} for chunk {i}" for i in range(len(code_chunks))]
         except Exception as e:
             return [f"Error: {str(e)}" for _ in range(len(code_chunks))]
+        
 
 def process_json_file(project_description: str, project_structure: str) -> None:
     """

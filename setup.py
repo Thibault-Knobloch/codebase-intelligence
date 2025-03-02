@@ -1,8 +1,11 @@
 from setuptools import setup, find_packages
 
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
 setup(
     name='tibo',
-    version='0.1.1',
+    version='1.1.1',
     packages=find_packages(),
     include_package_data=True,
     package_data={
@@ -25,8 +28,8 @@ setup(
     },
     # Metadata
     description="CLI tool for codebase indexing and natural language retrieval.",
-    long_description="A command-line tool for indexing codebases, generating call graphs, and chunking code into a vector database. It empowers users to query their code using natural language, retrieving relevant files, functions, and code snippets with ease.",
-    long_description_content_type="text/plain",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     author="Thibault Knobloch",
     author_email="thibaultknobloch@yahoo.fr",
     url="https://github.com/Thibault-Knobloch/codebase-intelligence",

@@ -1,0 +1,2 @@
+[console_scripts]
+codebase-intelligence = tibo.cli:cli

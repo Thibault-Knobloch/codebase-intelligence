@@ -96,12 +96,3 @@ def get_project_structure(root_dir, indent=0):
             result += f"{prefix}{item}\n"
     
     return result
-
-
-
-
-
-
-
-    
-    

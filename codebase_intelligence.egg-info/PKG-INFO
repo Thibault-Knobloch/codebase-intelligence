@@ -1,0 +1,33 @@
+Metadata-Version: 2.2
+Name: codebase-intelligence
+Version: 0.0.0
+Summary: CLI tool for codebase indexing and natural language retrieval.
+Home-page: https://github.com/Thibault-Knobloch/codebase-intelligence
+Author: Thibault Knobloch
+Author-email: thibaultknobloch@yahoo.fr
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: POSIX
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Intended Audience :: Developers
+Requires-Python: >=3.9
+Description-Content-Type: text/plain
+Requires-Dist: click==8.1.8
+Requires-Dist: graphviz==0.20.3
+Requires-Dist: tree_sitter==0.21.3
+Requires-Dist: requests==2.32.3
+Requires-Dist: numpy==1.26.4
+Requires-Dist: sentence_transformers==3.4.1
+Requires-Dist: faiss-cpu==1.10.0
+Requires-Dist: python-dotenv==1.0.1
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
+A command-line tool for indexing codebases, generating call graphs, and chunking code into a vector database. It empowers users to query their code using natural language, retrieving relevant files, functions, and code snippets with ease.

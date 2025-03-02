@@ -26,12 +26,17 @@ def extract_structure_from_file(file_path, module_name):
 
 
 def extract_python_project_structure_and_call_graph(project_path):
+    IGNORE_DIRS = ["node_modules", ".next"]
+
     project_structure = {}
     module_to_file = {}
     module_to_functions = defaultdict(list)
     python_files_found = False
 
     for root, _, files in os.walk(project_path):
+        if any(ignored in root for ignored in IGNORE_DIRS):
+            continue
+
         for file in files:
             if file.endswith(".py"):
                 python_files_found = True
@@ -89,4 +94,11 @@ def save_call_graph_image(call_graph, filename):
             short_caller = func_to_nodeid[caller]
             dot.edge(short_caller, short_func, label="called", color="red", arrowhead="normal")
     
-    dot.render(filename, view=False)
+    try:
+        dot.render(filename, view=False)
+    except Exception as e:
+        click.echo(
+            "WARN - Failed to generate (optional) call graph image due to missing Graphviz executables. "
+            "The call graph JSON is still saved. To generate the image, install Graphviz:\n"
+            "macOS -> brew install graphviz"
+        )

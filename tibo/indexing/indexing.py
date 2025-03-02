@@ -23,7 +23,7 @@ def index_project(path):
     generate_call_graph(path)
 
     # chunk project and keep mappings
-    chunk_project(path)
+    chunk_project()
 
     # save chunks to vector database
     save_to_vector_db()

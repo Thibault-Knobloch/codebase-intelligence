@@ -1,0 +1,8 @@
+click==8.1.8
+graphviz==0.20.3
+tree_sitter==0.21.3
+requests==2.32.3
+numpy==1.26.4
+sentence_transformers==3.4.1
+faiss-cpu==1.10.0
+python-dotenv==1.0.1
