@@ -59,4 +59,4 @@ An OpenAI API key (required for LLM functionality)
 We welcome contributions! Feel free to open issues or submit pull requests on our GitHub repository.
 
 License
-[Insert your license here, e.g., MIT License]
+MIT License
