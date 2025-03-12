@@ -20,6 +20,7 @@ setup(
         'sentence_transformers==3.4.1',  
         'faiss-cpu==1.10.0',          
         'python-dotenv==1.0.1',
+        'anthropic==0.43.0'
     ],
     entry_points={
         'console_scripts': [

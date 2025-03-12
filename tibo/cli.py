@@ -6,6 +6,7 @@ from pathlib import Path
 from tibo.indexing.indexing import index_project
 from tibo.fetching.fetching import fetch_query
 from tibo.config.config import config_project
+from tibo.agent.agent import start_agent_shell
 from tibo.utils import CONFIG_PATH
 
 @click.group()
@@ -65,6 +66,22 @@ def config():
     config_project()
     click.secho("\n✅ Project configured!\n", fg="green", bold=True)
 
+@cli.command()
+def agent():
+    """Start an interactive AI agent shell."""
+
+     # check prerequisite env variables
+    load_dotenv(CONFIG_PATH)
+    anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not anthropic_api_key:
+        click.secho(f"WARN - No ANTHROPIC API key found. Run 'tibo config' to set it up.", fg="yellow")
+        sys.exit()
+
+    try:
+        start_agent_shell()
+    except Exception as e:
+        click.secho(f"\n❌ Error in agent shell: {e}\n", fg="red", bold=True)
+        sys.exit(1)
 
 if __name__ == '__main__':
     cli()
