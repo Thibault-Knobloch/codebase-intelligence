@@ -22,6 +22,7 @@ FILE_CHUNKS_FILE_PATH = os.path.join(TIBO_CHUNKS_DIR, "file_chunks.json")
 
 load_dotenv(CONFIG_PATH)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
 
 TIBO_VECTOR_DIR = os.path.join(TIBO_DIR, "vector")

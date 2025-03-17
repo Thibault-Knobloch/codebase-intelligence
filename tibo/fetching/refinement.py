@@ -22,7 +22,7 @@ def determine_call_graph(chunk_path, func_name, python_lookup, typescript_lookup
         return typescript_lookup
     return None
 
-def extract_chunk_info(chunk):
+def extract_chunk_info(chunk, file_path=None):
     """Extract full key and function name from a chunk."""
     code = chunk['code-chunk']
     chunk_path = chunk.get('chunk-path', '')
@@ -104,7 +104,7 @@ def enhance_code_with_call_graph(python_call_graph, typescript_call_graph, query
         
         for chunk in chunks:
             code = chunk['code-chunk']
-            full_key, func_name = extract_chunk_info(chunk)
+            full_key, func_name = extract_chunk_info(chunk, file_path)
             
             if not full_key or not func_name:
                 relevant_context[file_path].append({

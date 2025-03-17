@@ -65,8 +65,15 @@ def fetch_query(query):
     echo_success(f"Relevant chunks fetched.")
 
     click.secho("\nRefining results with code graph...", bold=True)
-    py_call_graph_data = load_json_file(CALL_GRAPH_PY_FILE_PATH)
-    ts_call_graph_data = load_json_file(CALL_GRAPH_TS_FILE_PATH)
+    py_call_graph_data = {}
+    ts_call_graph_data = {}
+    
+    if os.path.exists(CALL_GRAPH_PY_FILE_PATH):
+        py_call_graph_data = load_json_file(CALL_GRAPH_PY_FILE_PATH)
+    
+    if os.path.exists(CALL_GRAPH_TS_FILE_PATH):
+        ts_call_graph_data = load_json_file(CALL_GRAPH_TS_FILE_PATH)
+    
     enhance_code_with_call_graph(py_call_graph_data, ts_call_graph_data, output_data, file_chunks_with_vectors)
     echo_success("Enhanced chunks saved.")
 

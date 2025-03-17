@@ -43,6 +43,19 @@ tibo fetch "my query to the codebase"
 Results include the most relevant file names and code chunks.
 Full output is saved in .tibo/query_output/query_output.json.
 
+
+4. NEW Interact with Tibo Agent - chat with the ai agent to understnad the codebase better and get help with implementing new features:
+```
+tibo agent
+```
+NOTE: requires running tibo config and adding ANTHROPIC_API_KEY when prompted.
+The agent can use the tibo fetching tools if you have run 'tibo index' before.
+In the shell:
+- type 'exit' or 'quit' to quit the agent shell
+- type '#' followed by a command to execute a command directly in your terminal
+- type 'reset' to reset the conversation history
+
+
 ## How It Works
 **Configuration**: Link Tibo to your OpenAI API for LLM-powered enhancements.
 
