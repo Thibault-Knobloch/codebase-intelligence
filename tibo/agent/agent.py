@@ -13,12 +13,7 @@ def start_agent_shell():
     """Start an interactive shell for the AI agent."""
     click.secho("\nStarting AI agent shell. Type 'exit' to quit.", fg="cyan", bold=True)
     agent = ClaudeAgent(anthropic_api_key=ANTHROPIC_API_KEY)
-    modify_file_tool = modify_file(
-        "/Users/thibaultknobloch/Developer/ai_projects/product-decision-ai/backend/app.py",
-        "update",
-        line_number=30,
-        new_line='    print("New server starting up...")'
-    )
+
     try:
         while True:
             user_input = click.prompt(
