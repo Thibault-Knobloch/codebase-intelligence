@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='tibo',
-    version='1.1.2',
+    version='1.1.3',
     packages=find_packages(),
     include_package_data=True,
     package_data={

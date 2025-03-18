@@ -5,9 +5,9 @@ from dotenv import load_dotenv
 from pathlib import Path
 from tibo.indexing.indexing import index_project
 from tibo.fetching.fetching import fetch_query
-from tibo.config.config import config_project
+from tibo.config.config import config_project, config_local
 from tibo.agent.agent import start_agent_shell
-from tibo.utils import CONFIG_PATH
+from tibo.utils import CONFIG_PATH, OPENAI_API_KEY, LOCAL_LLM, LOCAL_MODEL_NAME, LOCAL_LLM_URL
 
 @click.group()
 def cli():
@@ -18,11 +18,17 @@ def index():
     """Index a project directory."""
 
     # check prerequisite env variables
-    load_dotenv(CONFIG_PATH)
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        click.secho(f"WARN - No OPENAI API key found. Run 'tibo config' to set it up.", fg="yellow")
-        sys.exit()
+    if LOCAL_LLM == "True":
+        local_model_name = LOCAL_MODEL_NAME
+        local_llm_url = LOCAL_LLM_URL
+        if not local_model_name or not local_llm_url:
+            click.secho(f"WARN - Required LOCAL_MODEL_NAME or LOCAL_LLM_URL not found. Run 'tibo local' to set it up.", fg="yellow")
+            sys.exit()
+    else:
+        api_key = OPENAI_API_KEY
+        if not api_key:
+            click.secho(f"WARN - No OPENAI API key found. Run 'tibo config' to set it up.", fg="yellow")
+            sys.exit()
 
     # get root path (we want to index the directpry this command runs in)
     project_root = Path.cwd()
@@ -49,8 +55,21 @@ def fetch(query):
         click.secho("WARN - Please provide a query.")
         click.secho("Usage: tibo fetch <query>", fg="yellow")
         sys.exit(1)
-    click.secho("\nSearching codebase...", fg="cyan", bold=True)
     
+    # check prerequisite env variables
+    if LOCAL_LLM == "True":
+        local_model_name = LOCAL_MODEL_NAME
+        local_llm_url = LOCAL_LLM_URL
+        if not local_model_name or not local_llm_url:
+            click.secho(f"WARN - Required LOCAL_MODEL_NAME or LOCAL_LLM_URL not found. Run 'tibo local' to set it up.", fg="yellow")
+            sys.exit()
+    else:
+        api_key = OPENAI_API_KEY
+        if not api_key:
+            click.secho(f"WARN - No OPENAI API key found. Run 'tibo config' to set it up.", fg="yellow")
+            sys.exit()
+
+    click.secho("\nSearching codebase...", fg="cyan", bold=True)
     try:
         # start fetching
         fetch_query(query)
@@ -65,6 +84,14 @@ def config():
     click.secho("\nConfiguring project...", fg="cyan", bold=True)
     config_project()
     click.secho("\n✅ Project configured!\n", fg="green", bold=True)
+
+@cli.command()
+def local():
+    """Configure variables to use a locally running llm."""
+    click.secho("\nSetting up local llm settings...", fg="cyan", bold=True)
+    config_local()
+    click.secho("\n✅ Local settings configured!\n", fg="green", bold=True)
+
 
 @cli.command()
 def agent():

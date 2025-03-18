@@ -27,6 +27,12 @@ Follow these steps to integrate **tibo** into your workflow:
 tibo config
 ```
 
+OPTIONAL: Configure a local LLM to use for on device ai processing:
+```
+tibo config --local
+```
+NOTE: need to provide model name and url, and ensure the local llm server is running on your device at that specified URL.
+
 
 2. Index Your Project - Navigate to your project directory and index your codebase:
 ```
@@ -54,6 +60,12 @@ In the shell:
 - type 'exit' or 'quit' to quit the agent shell
 - type '#' followed by a command to execute a command directly in your terminal
 - type 'reset' to reset the conversation history
+
+Extra tools:
+- agent can perform web searches (requires setting up OPENAI_API_KEY)
+- agent can get project structure details (requires running tibo index)
+- agent can read file contents when needed
+NOTE: Editing/creating/deleting files coming soon...
 
 
 ## How It Works

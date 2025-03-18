@@ -7,7 +7,7 @@ import requests
 import click
 from ..utils import save_json, load_json_file, echo_success
 from ..utils import FILE_CHUNKS_WITH_VECTORS_FILE_PATH, FAISS_INDEX_PATH, PROJECT_DETAILS_FILE_PATH, QUERY_OUTPUT_DIR, QUERY_OUTPUT_FILE_PATH, OPENAI_API_KEY, OPENAI_API_URL
-from ..utils import CALL_GRAPH_PY_FILE_PATH, CALL_GRAPH_TS_FILE_PATH
+from ..utils import CALL_GRAPH_PY_FILE_PATH, CALL_GRAPH_TS_FILE_PATH, LOCAL_MODEL_NAME, LOCAL_LLM, LOCAL_LLM_URL
 from .refinement import enhance_code_with_call_graph
 
 def fetch_query(query):
@@ -33,7 +33,6 @@ def fetch_query(query):
     click.echo(f"OK - Sentence transformer model ({model_name}) loaded.")
 
     enhanced_query = enhance_query(query, project_description, project_structure)
-    click.echo(f"OK - Enhanced query with project context.")
     click.echo(f"Enhanced query: {enhanced_query}")
 
     query_embedding = get_embedding(enhanced_query, model)
@@ -102,7 +101,22 @@ def get_chunk_info(json_data, vector_id):
                 return filepath, chunk['en-chunk'], chunk['code-chunk'], chunk['chunk-path']
     return None, "", "", ""
 
+
 def enhance_query(
+    query: str,
+    project_description: str,
+    project_structure: str
+) -> str: 
+    if LOCAL_LLM == "True":
+        enhanced = enhance_query_local(query, project_description, project_structure)
+        click.echo(f"OK - Enhanced query with project context using LOCAL {LOCAL_MODEL_NAME}.")
+        return enhanced
+    else:
+        enhanced = enhance_query_openai(query, project_description, project_structure)
+        click.echo(f"OK - Enhanced query with project context using OPENAI gpt-4o-mini.")
+        return enhanced
+
+def enhance_query_openai(
     query: str,
     project_description: str,
     project_structure: str
@@ -141,4 +155,52 @@ def enhance_query(
     except Exception as e:
         print(f"Error generating enhanced query: {e}")
         return f"Error: {str(e)}"
+
+def enhance_query_local(
+    query: str,
+    project_description: str,
+    project_structure: str
+) -> str:
+    """
+    Enhance a query with project context using a local LLM.
+    """
+    retry_delays = [1, 2, 4, 8, 16]  # Exponential backoff delays in seconds
+    
+    for attempt, delay in enumerate(retry_delays + [None]):
+        try:
+            prompt = (
+                "Use the context below to improve the query to make sure it incorporates relevant information.\n"
+                f"Project description: {project_description}\n\n"
+                f"Project structure: {project_structure}\n\n"
+                f"Query: {query}\n\n"
+                "Output only the improved query—nothing else."
+            )
+            
+            headers = {
+                "Content-Type": "application/json"
+            }
+            
+            # Use format compatible with common local LLM APIs (like Ollama)
+            payload = {
+                "prompt": prompt,
+                "model": LOCAL_MODEL_NAME,
+                "max_tokens": 100,
+                "temperature": 0.3,
+                "stream": False
+            }
+            
+            response = requests.post(LOCAL_LLM_URL, headers=headers, json=payload)
+            response.raise_for_status()
+            
+            # Parse JSON response safely
+            try:
+                data = response.json()
+                enhanced_query = data.get("response", "").strip()
+                return enhanced_query
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Invalid JSON response: {e}")
+                
+        except Exception as e:
+            print(f"Error generating enhanced query: {e}")
+            return query
     

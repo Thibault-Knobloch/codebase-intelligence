@@ -24,6 +24,9 @@ load_dotenv(CONFIG_PATH)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
+LOCAL_LLM = os.getenv("LOCAL_LLM")
+LOCAL_MODEL_NAME = os.getenv("LOCAL_MODEL_NAME")
+LOCAL_LLM_URL = os.getenv("LOCAL_LLM_URL")
 
 TIBO_VECTOR_DIR = os.path.join(TIBO_DIR, "vector")
 FILE_CHUNKS_WITH_VECTORS_FILE_PATH = os.path.join(TIBO_VECTOR_DIR, "file_chunks_with_vectors.json")
