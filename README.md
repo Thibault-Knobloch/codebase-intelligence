@@ -29,7 +29,7 @@ tibo config
 
 OPTIONAL: Configure a local LLM to use for on device ai processing:
 ```
-tibo config
+tibo local
 ```
 NOTE: need to provide model name and url, and ensure the local llm server is running on your device at that specified URL.
 
