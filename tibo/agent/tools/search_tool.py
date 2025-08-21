@@ -16,4 +16,3 @@ def web_search(query: str) -> str:
     )
     return response.choices[0].message.content
 
-

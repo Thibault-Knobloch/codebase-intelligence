@@ -9,49 +9,54 @@ def read_file_content(file_path):
 
 def modify_file(file_path, action, from_line=None, to_line=None, new_content=None):
     """
-    Modify a file by inserting, deleting, or updating a range of lines.
-
-    :param file_path: Path to the file to be modified.
-    :param action: Action to perform: 'insert', 'delete', or 'update'.
-    :param from_line: Starting line number (1-based index) of the range to modify.
-    :param to_line: Ending line number (1-based index) of the range to modify (optional, defaults to from_line if not provided).
-    :param new_content: The new content for insertion or update (string or list of strings).
+    Modify a file using 0-based line numbers with improved error handling.
     """
-    with open(file_path, 'r') as file:
-        lines = file.readlines()
-
-    # If to_line is not provided, set it equal to from_line
-    if to_line is None:
-        to_line = from_line
-
-    # Validate line numbers
-    if from_line is not None and to_line is not None:
-        if not (0 < from_line <= to_line <= len(lines) + 1):
-            raise ValueError("Invalid line number range")
-
-    if action == 'insert' and from_line is not None and new_content is not None:
-        # Convert new_content to list of lines if it's a single string
+    try:
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+        
+        max_index = len(lines)
+        
+        if action not in {'insert', 'delete', 'update'}:
+            return f"Error: Invalid action '{action}'. Use 'insert', 'delete', or 'update'."
+        
+        # Auto-correct line numbers to be within bounds
+        from_line = max(0, min(from_line, max_index))
+        to_line = max(from_line, min(to_line, max_index))
+        
         if isinstance(new_content, str):
-            new_lines = [line + '\n' for line in new_content.split('\n') if line]
+            new_lines = [line + '\n' if not line.endswith('\n') else line for line in new_content.splitlines()]
+        elif isinstance(new_content, list):
+            new_lines = [line + '\n' if not line.endswith('\n') else line for line in new_content]
         else:
-            new_lines = [line + '\n' for line in new_content]
-        lines[from_line - 1:from_line - 1] = new_lines
+            new_lines = []
+        
+        if action == 'insert':
+            lines[from_line:from_line] = new_lines
+            result = f"Successfully inserted {len(new_lines)} lines at line {from_line}"
+            
+        elif action == 'delete':
+            deleted_count = to_line - from_line
+            del lines[from_line:to_line]
+            result = f"Successfully deleted {deleted_count} lines from line {from_line} to {to_line-1}"
+            
+        elif action == 'update':
+            deleted_count = to_line - from_line
+            del lines[from_line:to_line]
+            lines[from_line:from_line] = new_lines
+            result = f"Successfully updated {deleted_count} lines with {len(new_lines)} new lines starting at line {from_line}"
+        
+        with open(file_path, 'w') as file:
+            file.writelines(lines)
+            
+        return result
+        
+    except FileNotFoundError:
+        return f"Error: File not found at path '{file_path}'"
+    except Exception as e:
+        return f"Error: {str(e)}"
 
-    elif action == 'delete' and from_line is not None:
-        if 0 < from_line <= len(lines):
-            del lines[from_line - 1:to_line]
 
-    elif action == 'update' and from_line is not None and new_content is not None:
-        # Convert new_content to list of lines if it's a single string
-        if isinstance(new_content, str):
-            new_lines = [line + '\n' for line in new_content.split('\n') if line]
-        else:
-            new_lines = [line + '\n' for line in new_content]
-        del lines[from_line - 1:to_line]
-        lines[from_line - 1:from_line - 1] = new_lines
-
-    with open(file_path, 'w') as file:
-        file.writelines(lines)
 
 def create_file(file_path, content=""):
     """

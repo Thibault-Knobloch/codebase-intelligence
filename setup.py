@@ -21,7 +21,7 @@ setup(
         'faiss-cpu==1.10.0',          
         'python-dotenv==1.0.1',
         'anthropic==0.43.0',
-        'openai==1.59.3'
+        'openai==1.68.2'
     ],
     entry_points={
         'console_scripts': [
